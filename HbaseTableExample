@@ -1,0 +1,67 @@
+package org.apache.hbase.examples;
+
+import java.io.IOException;
+
+import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.client.Get;
+import org.apache.hadoop.hbase.client.HTable;
+import org.apache.hadoop.hbase.client.Put;
+import org.apache.hadoop.hbase.client.Result;
+import org.apache.hadoop.hbase.client.ResultScanner;
+import org.apache.hadoop.hbase.client.Scan;
+import org.apache.hadoop.hbase.mapreduce.TableOutputFormat;
+import org.apache.hadoop.hbase.util.Bytes;
+
+public class HbaseTableExample {
+
+	public static void main(String[] args) throws IOException {
+
+		Configuration config = HBaseConfiguration.create();
+		config.set(TableOutputFormat.OUTPUT_TABLE, "Kalikant");
+
+		config.set("hbase.zookeeper.quorum", "111.222.333.444");
+		config.set("hbase.zookeeper.property.clientport", "2181");
+		config.set("zookeeper.znode.parent", "/hbase-unsecure");
+		config.set("hbase.master", "111.222.333.444:66000");
+		System.out.println("Before table:");
+		// Configuration config = HBaseConnector.getHbaseConfiguration();
+
+		HTable table = new HTable(config, "myLittleHBaseTable");
+
+		Put p = new Put(Bytes.toBytes("myLittleRow3"));
+
+		p.add(Bytes.toBytes("myLittleFamily"), Bytes.toBytes("someQualifier"), Bytes.toBytes("Some Value"));
+
+		System.out.println("Before Put:");
+		table.put(p);
+		// table.close();
+
+		System.out.println("After Put:");
+		Get g = new Get(Bytes.toBytes("myLittleRow"));
+		System.out.println("Before GET");
+		Result r = table.get(g);
+		System.out.println("After GET");
+		byte[] value = r.getValue(Bytes.toBytes("myLittleFamily"), Bytes.toBytes("someQualifier"));
+		System.out.println("After GET1");
+		String valueStr = Bytes.toString(value);
+		System.out.println("GET: " + valueStr);
+
+		Scan s = new Scan();
+		s.addColumn(Bytes.toBytes("myLittleFamily"), Bytes.toBytes("someQualifier"));
+		ResultScanner scanner = table.getScanner(s);
+		try {
+
+			for (Result rr = scanner.next(); rr != null; rr = scanner.next()) {
+
+				System.out.println("Found row: " + rr);
+			}
+
+		} finally {
+
+			scanner.close();
+		}
+
+	}
+
+}
